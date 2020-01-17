@@ -1,5 +1,7 @@
 import re
 import time
+import pwd
+import os
 
 from onedns import zone
 from onedns import resolver
@@ -61,7 +63,7 @@ class OneDNS(resolver.DynamicResolver):
         log.info("Adding VM {id}: {vm}".format(id=vm.id, vm=vm.name))
         for name, ip in dns_entries.items():
             self._check_for_duplicates(vm.id, name, ip, zone=zone)
-            self.add_host(name, ip, zone=zone)
+            self.add_host(name.lower(), ip, zone=zone)
 
     def remove_vm(self, vm, zone=None):
         dns_entries = self._get_vm_dns_entries(vm)
@@ -93,9 +95,15 @@ class OneDNS(resolver.DynamicResolver):
     def daemon(self, *args, **kwargs):
         test = kwargs.pop('test', False)
         test_vms = kwargs.pop('test_vms', None)
+        user = kwargs.pop('user', 'nobody')
         sync_interval = kwargs.pop('sync_interval', 5 * 60)
         if self._udp_server is None or not self._udp_server.isAlive():
             self.start(*args, **kwargs)
+        _, _, uid, gid, _, root, shell = pwd.getpwnam(user)
+        os.chdir('/')
+        os.setgroups([])
+        os.setgid(gid)
+        os.setuid(uid)
         while self._udp_server.isAlive():
             try:
                 self.sync(vms=test_vms)

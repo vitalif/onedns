@@ -12,6 +12,7 @@ def daemon(args, one_args, **kwargs):
     srv = server.OneDNS(args.domain, one_kwargs=one_args)
     srv.daemon(dns_port=args.dns_port,
                sync_interval=args.sync_interval,
+               user=args.user,
                test=test, test_vms=test_vms)
 
 
@@ -58,6 +59,9 @@ def get_parser():
     daemon_parser.add_argument(
         '--sync-interval', required=False, default=5 * 60, type=positive_int,
         help="time in seconds between ONE syncs")
+    daemon_parser.add_argument(
+        '--user', required=False, default='nobody',
+        help="system user name to setuid() to")
 
     shell_parser = subparsers.add_parser('shell')
     shell_parser.set_defaults(func=shell)
