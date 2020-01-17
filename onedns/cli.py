@@ -10,7 +10,8 @@ def daemon(args, one_args, **kwargs):
     test = kwargs.get('test', False)
     test_vms = kwargs.get('test_vms')
     srv = server.OneDNS(args.domain, one_kwargs=one_args)
-    srv.daemon(dns_port=args.dns_port,
+    srv.daemon(dns_address=args.dns_address,
+               dns_port=args.dns_port,
                sync_interval=args.sync_interval,
                user=args.user,
                test=test, test_vms=test_vms)
@@ -53,6 +54,9 @@ def get_parser():
 
     daemon_parser = subparsers.add_parser('daemon')
     daemon_parser.set_defaults(func=daemon)
+    daemon_parser.add_argument(
+        '--dns-address', required=False, default='0.0.0.0',
+        help="host for DNS server to listen on")
     daemon_parser.add_argument(
         '--dns-port', required=False, default=53, type=positive_int,
         help="port for DNS server to listen on")
