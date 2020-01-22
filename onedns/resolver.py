@@ -72,7 +72,7 @@ class DynamicResolver(server.BaseResolver):
         z.remove_host(name, ip)
 
     def start(self, dns_address='0.0.0.0', dns_port=53,
-              api_address='127.0.0.1', api_port=8000, tcp=False, udplen=0,
+              api_address='127.0.0.1', api_port=8000, tcp=True, udplen=0,
               log_components="request,reply,truncated,error",
               log_prefix=False):
         logger = server.DNSLogger(log_components, log_prefix)

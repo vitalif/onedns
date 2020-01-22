@@ -66,6 +66,10 @@ def get_parser():
     daemon_parser.add_argument(
         '--user', required=False, default='nobody',
         help="system user name to setuid() to")
+    daemon_parser.add_argument(
+        '--no-tcp', dest='tcp', action='store_false',
+        help="disable TCP")
+    daemon_parser.set_defaults(tcp=True)
 
     shell_parser = subparsers.add_parser('shell')
     shell_parser.set_defaults(func=shell)
