@@ -39,9 +39,11 @@ class DynamicResolver(server.BaseResolver):
         qname = request.q.qname
         qtype = request.q.qtype
         try:
-            if qtype in (dnslib.QTYPE.A, dnslib.QTYPE.AAAA):
+            if qtype == dnslib.QTYPE.A:
                 forward = self.zone.get_forward(qname)
                 reply.add_answer(forward)
+            elif qtype == dnslib.QTYPE.AAAA:
+                reply.header.rcode = 0
             elif qtype == dnslib.QTYPE.PTR:
                 reverse = self.zone.get_reverse(
                     utils.reverse_to_ip(qname.idna()))
