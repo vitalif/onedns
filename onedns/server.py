@@ -21,6 +21,7 @@ class OneDNS(resolver.DynamicResolver):
 
     def __init__(self, domain, one_kwargs={}):
         super(OneDNS, self).__init__(domain)
+        self.extra_entries = {}
         self._one = one.OneClient(**one_kwargs)
 
     def _check_for_networks(self, vm):
@@ -49,21 +50,17 @@ class OneDNS(resolver.DynamicResolver):
         z = zone or self.zone
         try:
             f = z.get_forward(name)
-            raise exception.DuplicateVMError(vm_id, f, ip)
+            return True
         except exception.RecordDoesNotExist:
             pass
-        try:
-            r = z.get_reverse(ip)
-            raise exception.DuplicateVMError(vm_id, ip, r)
-        except exception.RecordDoesNotExist:
-            pass
+        return False
 
     def add_vm(self, vm, zone=None):
         dns_entries = self._get_vm_dns_entries(vm)
         log.info("Adding VM {id}: {vm}".format(id=vm.id, vm=vm.name))
         for name, ip in dns_entries.items():
-            self._check_for_duplicates(vm.id, name, ip, zone=zone)
-            self.add_host(name.lower(), ip, zone=zone)
+            if not self._check_for_duplicates(vm.id, name, ip, zone=zone):
+                self.add_host(name.lower(), ip, zone=zone)
 
     def remove_vm(self, vm, zone=None):
         dns_entries = self._get_vm_dns_entries(vm)
@@ -83,6 +80,8 @@ class OneDNS(resolver.DynamicResolver):
         z = zone.Zone(self.domain)
         vms = vms or self._one.vms()
         vms.sort(key=lambda x: x.id)
+        for name, ip in self.extra_entries.items():
+            self.add_host(name, ip, z)
         for vm in vms:
             try:
                 self.add_vm(vm, zone=z)
@@ -96,7 +95,13 @@ class OneDNS(resolver.DynamicResolver):
         test = kwargs.pop('test', False)
         test_vms = kwargs.pop('test_vms', None)
         user = kwargs.pop('user', 'nobody')
+        extra = kwargs.pop('extra', None)
         sync_interval = kwargs.pop('sync_interval', 5 * 60)
+        if extra is not None:
+            with open(extra, "r") as f:
+                for line in f:
+                    [ ip, host ] = re.split('\s+', line.strip(), 2)
+                    self.extra_entries[host] = ip
         if self._udp_server is None or not self._udp_server.isAlive():
             self.start(*args, **kwargs)
         _, _, uid, gid, _, root, shell = pwd.getpwnam(user)

@@ -13,6 +13,7 @@ def daemon(args, one_args, **kwargs):
     srv.daemon(dns_address=args.dns_address,
                dns_port=args.dns_port,
                sync_interval=args.sync_interval,
+               extra=args.extra,
                user=args.user,
                test=test, test_vms=test_vms)
 
@@ -66,6 +67,9 @@ def get_parser():
     daemon_parser.add_argument(
         '--user', required=False, default='nobody',
         help="system user name to setuid() to")
+    daemon_parser.add_argument(
+        '--extra', required=False, default='',
+        help="file with additional DNS entries in format <ip> <name>")
     daemon_parser.add_argument(
         '--no-tcp', dest='tcp', action='store_false',
         help="disable TCP")
